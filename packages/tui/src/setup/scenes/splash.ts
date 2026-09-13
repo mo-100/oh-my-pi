@@ -7,16 +7,8 @@ import { formatKeyHint } from "../../app-keybindings";
 export const SETUP_SPLASH_MS = 2600;
 export const SETUP_TICK_MS = 33;
 
-/** Brand mark at 2x: every glyph doubled horizontally, every row doubled vertically. */
-const LARGE_LOGO = PI_LOGO.flatMap(line => {
-	let wide = "";
-	for (const char of line) {
-		wide += char === " " ? "  " : `${char}${char}`;
-	}
-	return [wide, wide];
-});
-const LOGO_WIDTH = Math.max(...LARGE_LOGO.map(line => visibleWidth(line)));
-const LOGO_HEIGHT = LARGE_LOGO.length;
+const LOGO_WIDTH = Math.max(...PI_LOGO.map(line => visibleWidth(line)));
+const LOGO_HEIGHT = PI_LOGO.length;
 const RESET = "\x1b[0m";
 
 /** Full scene needs comfortable room; below this we drop to a centered mark. */
@@ -110,8 +102,8 @@ function waterAmplitude(
 }
 
 /**
- * Animated setup splash, in the spirit of the omp landing page: the brand π
- * mark rendered with the live diagonal gradient + shine sweep, rising out of a
+ * Animated setup splash, in the spirit of the omp landing page: the brand
+ * wordmark rendered with the live diagonal gradient + shine sweep, rising out of a
  * rippling, gradient-lit water surface, under a faint twinkling starfield. The
  * mark and water share one continuous gradient so the sweep reads across the
  * whole scene; the water surface drifts each frame.
@@ -156,7 +148,7 @@ export function renderSetupSplash(width: number, height: number, elapsedMs: numb
 		}
 	}
 	// 3. hero — the brand mark with the live gradient + shine sweep
-	LARGE_LOGO.forEach((line, row) => {
+	PI_LOGO.forEach((line, row) => {
 		let col = 0;
 		for (const ch of line) {
 			if (ch !== " ") {
@@ -183,8 +175,7 @@ export function renderSetupSplash(width: number, height: number, elapsedMs: numb
 
 /** Centered fallback for windows too small to hold the full scene. */
 function renderCompactSplash(width: number, height: number, phase: number, shine: ShineConfig): string[] {
-	const art = height >= 14 ? LARGE_LOGO : PI_LOGO;
-	const content = [...gradientLogo(art, phase, shine), "", theme.bold("O h   M y   P i")];
+	const content = [...gradientLogo(PI_LOGO, phase, shine), "", theme.bold("O h   M y   P i")];
 	const start = Math.max(0, Math.floor((height - content.length) / 2));
 	const lines: string[] = [];
 	for (let y = 0; y < height; y++) {

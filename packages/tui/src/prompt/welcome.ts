@@ -302,8 +302,8 @@ export class WelcomeComponent implements Component {
 			return [];
 		}
 		const dualContentWidth = boxWidth - 3; // 3 = │ + │ + │
-		const preferredLeftCol = 26;
-		const minLeftCol = 12; // logo width
+		const preferredLeftCol = PI_LOGO_WIDTH + PI_LOGO_PAD * 2;
+		const minLeftCol = PI_LOGO_WIDTH + PI_LOGO_PAD * 2; // logo + padding
 		const minRightCol = 20;
 		// Dynamic model/provider labels are truncated inside the fixed column.
 		// Letting them influence the responsive breakpoint changes the box height
@@ -516,8 +516,26 @@ export class WelcomeComponent implements Component {
 	}
 }
 
-/** Block-grid brand mark shared by the welcome and setup surfaces. */
-export const PI_LOGO = ["████████████", "   ██  ██   ", "   ██  ██   ", "   ▒▒  ██   ", "       ██   "];
+/**
+ * Block-grid brand mark shared by the welcome, splash, and setup surfaces: the
+ * Mozn wordmark hand-cut to the terminal grid — 2-cell stems, 1-row bars, and
+ * per-letter symmetry (M and O mirrored about their centerline, Z and N
+ * invariant under a 180° rotation).
+ */
+export const PI_LOGO = [
+	"████    ████ █████████ ████████ ████    ██",
+	"████    ████ ███   ███      ██  ██ ██   ██",
+	"██ ██  ██ ██ ██     ██    ██    ██  ██  ██",
+	"██ ██  ██ ██ ██     ██    ██    ██  ██  ██",
+	"██  ████  ██ ███   ███  ██      ██   ██ ██",
+	"██  ████  ██ █████████ ████████ ██    ████",
+];
+
+/** Visible width of {@link PI_LOGO}; every row of the art is padded to it. */
+export const PI_LOGO_WIDTH = Math.max(...PI_LOGO.map(line => line.length));
+
+/** Blank columns kept between the brand mark and the borders that frame it. */
+export const PI_LOGO_PAD = 4;
 
 /** Multi-stop palette for the diagonal gradient. */
 const GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
