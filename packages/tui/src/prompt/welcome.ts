@@ -537,15 +537,24 @@ export const PI_LOGO_WIDTH = Math.max(...PI_LOGO.map(line => line.length));
 /** Blank columns kept between the brand mark and the borders that frame it. */
 export const PI_LOGO_PAD = 4;
 
-/** Multi-stop palette for the diagonal gradient. */
+/**
+ * Multi-stop palette for the diagonal gradient: Mozn's accent ladder, dark
+ * teal → brand teal → bright aqua. The brand carries no second hue — navy and
+ * white chrome plus a single teal accent — so the sweep stays inside that one
+ * teal family instead of the previous magenta → purple → cyan.
+ */
 const GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
-	[248, 79, 204], // oklch(0.7 0.24 340)
-	[147, 98, 244], // oklch(0.62 0.21 295)
-	[0, 219, 228], // oklch(0.81 0.14 200)
+	[4, 174, 174], // #04AEAE — accent--teal-dark
+	[3, 231, 231], // #03E7E7 — accent--teal-300 (logo + CTA accent)
+	[1, 255, 255], // #01FFFF — accent--teal
 ];
 
-/** 256-color ramp fallback when truecolor isn't available. */
-const GRADIENT_RAMP_256 = [206, 170, 134, 99, 69, 74, 44];
+/**
+ * 256-color ramp fallback when truecolor isn't available: xterm's pure-teal
+ * ladder, `#005f5f` → `#00ffff`, so both color modes render the same hue path
+ * (the ramp's ends approximate the first and last {@link GRADIENT_STOPS}).
+ */
+const GRADIENT_RAMP_256 = [23, 30, 37, 44, 51];
 
 /** Half-width of the shine highlight band, expressed in gradient-t units. */
 const SHINE_HALF_WIDTH = 0.18;
@@ -567,8 +576,8 @@ export function gradientEscape(t: number, shine?: ShineConfig): string {
 	const shineStrength = shine && shine.strength > 0 ? shine.strength : 0;
 	const shinePos = shine ? shine.pos : 0;
 	if (TERMINAL.trueColor) {
-		// 5-stop palette widens the visible color range and avoids the
-		// deep-blue valley a naive HSL lerp falls into.
+		// The stops already sit on one hue, so a straight RGB lerp between them
+		// stays clean — no hue wrap for the sweep to detour around.
 		const stops = GRADIENT_STOPS;
 		const seg = t * (stops.length - 1);
 		const i = Math.min(stops.length - 2, Math.floor(seg));
@@ -622,7 +631,7 @@ export function gradientLogo(lines: readonly string[], phase = 0, shine?: ShineC
 				continue;
 			}
 			// SVG's (0,0) → (1,1) gradient projects both normalized axes
-			// equally: top-right and bottom-left land on the purple midpoint.
+			// equally: top-right and bottom-left land on the teal midpoint.
 			const base = (x / xSpan + y / ySpan) / 2;
 			const t = normalizedPhase === 0 ? base : (base + normalizedPhase) % 1;
 			result += gradientEscape(t, shine) + char + reset;
