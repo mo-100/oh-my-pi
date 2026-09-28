@@ -20,11 +20,11 @@ export const IDA_DAEMON_PREFIX = "omp.ida.";
 const DAEMON_NAME_MAX = 48;
 
 /** Broker readiness regex matched against the banner the host prints once it listens. */
-export const IDA_HOST_READY_PATTERN = String.raw`omp ida host listening on \S+`;
+export const IDA_HOST_READY_PATTERN = String.raw`mozn ida host listening on \S+`;
 
 /** Banner printed on stdout once the host socket accepts connections. */
 export function idaHostReadyBanner(endpoint: string): string {
-	return `omp ida host listening on ${endpoint}`;
+	return `mozn ida host listening on ${endpoint}`;
 }
 
 /** Message text of any thrown value, for logs and wire errors. */

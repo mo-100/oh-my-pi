@@ -27,16 +27,16 @@ export default class BrowserRelay extends Command {
 			description: "Extension install directory (install; default ~/.omp/browser-relay/extension)",
 		}),
 		"no-group": Flags.boolean({
-			description: "Don't gather controllable tabs into an 'omp' tab group",
+			description: "Don't gather controllable tabs into a 'mozn' tab group",
 			default: false,
 		}),
 		verbose: Flags.boolean({ char: "v", description: "Log relay traffic summaries to stderr", default: false }),
 	};
 
 	static examples = [
-		"omp browser-relay install    # write the Chrome extension to disk + setup steps",
-		"omp browser-relay            # serve the relay on the default port",
-		"omp browser-relay -p 9333 --token s3cret",
+		"mozn browser-relay install    # write the Chrome extension to disk + setup steps",
+		"mozn browser-relay            # serve the relay on the default port",
+		"mozn browser-relay -p 9333 --token s3cret",
 	];
 
 	async run(): Promise<void> {

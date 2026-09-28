@@ -380,7 +380,7 @@ export async function runModelsCommand(command: ModelsCommandArgs): Promise<void
 	const kind = command.flags.kind ?? "chat";
 
 	if (action === "find" && (!pattern || pattern.trim().length === 0)) {
-		process.stderr.write("`omp models find` requires a search substring, e.g. `omp models find minimax`\n");
+		process.stderr.write("`mozn models find` requires a search substring, e.g. `mozn models find minimax`\n");
 		process.exitCode = 1;
 		return;
 	}

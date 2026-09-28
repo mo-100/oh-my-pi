@@ -269,7 +269,7 @@ export async function runRenderCommand(args: RenderCommandArgs): Promise<number>
 			mode?.stop();
 			await session?.dispose();
 		} catch (err) {
-			logger.debug("omp render teardown failed", { error: String(err) });
+			logger.debug("mozn render teardown failed", { error: String(err) });
 		}
 		tempDir.removeSync();
 	}

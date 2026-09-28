@@ -21,7 +21,7 @@ export const cfgSkillsRegistryUrl = register({
 		group: "Skills",
 		label: "Skill Registry",
 		description:
-			"Skillshare registry used by `omp skill` to install, search, and publish skills (https://host[:port])",
+			"Skillshare registry used by `mozn skill` to install, search, and publish skills (https://host[:port])",
 	},
 });
 

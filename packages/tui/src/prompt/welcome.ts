@@ -302,17 +302,21 @@ export class WelcomeComponent implements Component {
 			return [];
 		}
 		const dualContentWidth = boxWidth - 3; // 3 = │ + │ + │
-		const preferredLeftCol = PI_LOGO_WIDTH + PI_LOGO_PAD * 2;
-		const minLeftCol = PI_LOGO_WIDTH + PI_LOGO_PAD * 2; // logo + padding
+		const minLeftCol = PI_LOGO_COMPACT_WIDTH; // compact mark width
+		// The wordmark spends a wide left column on brand; it earns one only when
+		// the frame can afford it (>= ~82 columns), otherwise the compact mark
+		// keeps the right column and keeps dynamic model/provider labels
+		// truncated rather than collapsing the responsive breakpoint.
+		const preferredLeftCol = Math.min(
+			PI_LOGO_WIDTH + PI_LOGO_PAD * 2,
+			Math.max(minLeftCol, Math.floor(dualContentWidth * 0.55)),
+		);
 		const minRightCol = 20;
 		// Dynamic model/provider labels are truncated inside the fixed column.
 		// Letting them influence the responsive breakpoint changes the box height
 		// when authoritative session data replaces the empty prepaint labels.
 		const leftMinContentWidth = Math.max(minLeftCol, visibleWidth("Welcome back!"));
-		const desiredLeftCol = Math.max(
-			Math.min(preferredLeftCol, Math.max(minLeftCol, Math.floor(dualContentWidth * 0.35))),
-			leftMinContentWidth,
-		);
+		const desiredLeftCol = Math.max(preferredLeftCol, leftMinContentWidth);
 		const dualLeftCol =
 			dualContentWidth >= minRightCol + 1
 				? Math.min(desiredLeftCol, dualContentWidth - minRightCol)
@@ -322,8 +326,9 @@ export class WelcomeComponent implements Component {
 		const leftCol = showRightColumn ? dualLeftCol : boxWidth - 2;
 		const rightCol = showRightColumn ? dualRightCol : 0;
 
-		// Logo: pick a frame from the intro animation if active, else the resting frame.
-		const logoColored = this.#currentLogoFrame();
+		// Logo: the wordmark only when the left column can hold it, else the mark.
+		const logoArt = leftCol >= PI_LOGO_WIDTH ? PI_LOGO : PI_LOGO_COMPACT;
+		const logoColored = this.#currentLogoFrame(logoArt);
 
 		// Left column - centered content
 		const leftLines = [
@@ -508,11 +513,11 @@ export class WelcomeComponent implements Component {
 	}
 
 	/** Pick the logo frame for the current intro phase, or the resting frame. */
-	#currentLogoFrame(): readonly string[] {
-		if (this.#animStart == null) return REST_FRAME;
+	#currentLogoFrame(art: readonly string[]): readonly string[] {
+		if (this.#animStart == null) return restLogoFrame(art);
 		const elapsed = performance.now() - this.#animStart;
-		if (elapsed >= INTRO_MS) return REST_FRAME;
-		return introLogoFrame(elapsed / INTRO_MS);
+		if (elapsed >= INTRO_MS) return restLogoFrame(art);
+		return introLogoFrame(elapsed / INTRO_MS, art);
 	}
 }
 
@@ -533,6 +538,17 @@ export const PI_LOGO = [
 
 /** Visible width of {@link PI_LOGO}; every row of the art is padded to it. */
 export const PI_LOGO_WIDTH = Math.max(...PI_LOGO.map(line => line.length));
+
+/**
+ * Compact brand mark: the wordmark's leading `M` glyph, cut to five rows so a
+ * short terminal keeps one more body row (the wordmark is six). Rendered
+ * wherever the full {@link PI_LOGO} wordmark does not fit the column or frame —
+ * the welcome box below ~82 columns, the setup header on short screens.
+ */
+export const PI_LOGO_COMPACT = ["████    ████", "████    ████", "██ ██  ██ ██", "██  ████  ██", "██  ████  ██"];
+
+/** Visible width of {@link PI_LOGO_COMPACT}. */
+export const PI_LOGO_COMPACT_WIDTH = Math.max(...PI_LOGO_COMPACT.map(line => line.length));
 
 /** Blank columns kept between the brand mark and the borders that frame it. */
 export const PI_LOGO_PAD = 4;
@@ -659,13 +675,22 @@ const INTRO_SHINE_TRAVERSALS = 3;
  * fades with the same ease-out curve so the highlight is gone by the resting
  * frame.
  */
-function introLogoFrame(progress: number): string[] {
+function introLogoFrame(progress: number, art: readonly string[]): string[] {
 	const eased = 1 - (1 - progress) ** 3;
 	const phase = ((((1 - eased) * INTRO_SWEEPS) % 1) + 1) % 1;
 	const shinePos = (((progress * INTRO_SHINE_TRAVERSALS) % 1) + 1) % 1;
 	const shineStrength = (1 - eased) ** 1.5;
-	return gradientLogo(PI_LOGO, phase, { strength: shineStrength, pos: shinePos });
+	return gradientLogo(art, phase, { strength: shineStrength, pos: shinePos });
 }
 
-/** Resting gradient frame, cached for re-renders outside of the intro. */
-const REST_FRAME = gradientLogo(PI_LOGO, 0);
+/** Resting gradient frames, cached per art (wordmark and compact mark alike). */
+const REST_FRAMES = new Map<readonly string[], string[]>();
+
+function restLogoFrame(art: readonly string[]): string[] {
+	let frame = REST_FRAMES.get(art);
+	if (frame === undefined) {
+		frame = gradientLogo(art, 0);
+		REST_FRAMES.set(art, frame);
+	}
+	return frame;
+}

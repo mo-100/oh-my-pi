@@ -1,6 +1,6 @@
 import * as os from "node:os";
 import * as path from "node:path";
-import { normalizeProfileName } from "@oh-my-pi/pi-utils/dirs";
+import { APP_NAME, normalizeProfileName } from "@oh-my-pi/pi-utils/dirs";
 
 export type ProfileAliasShell = "bash" | "zsh" | "fish" | "powershell" | "pwsh";
 
@@ -27,10 +27,10 @@ export interface ProfileAliasProcessOptions {
 }
 
 const DEFAULT_ALIAS_COMMAND: ProfileAliasCommand = {
-	display: "omp",
-	posix: "omp",
-	fish: "omp",
-	powerShell: "omp",
+	display: APP_NAME,
+	posix: APP_NAME,
+	fish: APP_NAME,
+	powerShell: APP_NAME,
 };
 
 export interface ProfileAliasInstallOptions {
@@ -154,8 +154,8 @@ function validateAliasName(aliasName: string, shell: ProfileAliasShell): string 
 	if (!ALIAS_NAME_RE.test(normalized)) {
 		throw new Error(`Invalid alias "${aliasName}". Alias names must match ${ALIAS_NAME_RE.source}.`);
 	}
-	if (normalized.toLowerCase() === "omp") {
-		throw new Error('Invalid alias "omp". Refusing to shadow the base omp command.');
+	if (normalized.toLowerCase() === APP_NAME) {
+		throw new Error(`Invalid alias "${aliasName}". Refusing to shadow the base ${APP_NAME} command.`);
 	}
 	if (getReservedAliasNames(shell).has(normalized.toLowerCase())) {
 		throw new Error(`Invalid alias "${aliasName}". Refusing to create a ${shell} reserved word.`);
@@ -276,6 +276,21 @@ function resolveShellConfigPath(
 	}
 }
 
+/**
+ * Legacy marker prefix written before the Mozn rename. Blocks created by an
+ * earlier build still carry `omp` markers, and recognizing them keeps an
+ * upgrade from appending a second block beside the stale one.
+ */
+const LEGACY_ALIAS_MARKER_BRAND = "omp";
+
+/** Managed-block marker lines; the brand prefix follows {@link APP_NAME}. */
+function aliasMarkers(brand: string, aliasName: string): { start: string; end: string } {
+	return {
+		start: `# >>> ${brand} profile alias: ${aliasName} >>>`,
+		end: `# <<< ${brand} profile alias: ${aliasName} <<<`,
+	};
+}
+
 function renderAliasBlock(
 	shell: ProfileAliasShell,
 	aliasName: string,
@@ -283,13 +298,12 @@ function renderAliasBlock(
 	command: ProfileAliasCommand,
 ): { block: string; command: string } {
 	const profiledCommand = `${command.display} --profile=${profile}`;
-	const start = `# >>> omp profile alias: ${aliasName} >>>`;
-	const end = `# <<< omp profile alias: ${aliasName} <<<`;
+	const { start, end } = aliasMarkers(APP_NAME, aliasName);
 	let body: string;
 	switch (shell) {
 		case "fish":
 			body = [
-				`function ${aliasName} --wraps omp --description 'OMP profile ${profile}'`,
+				`function ${aliasName} --wraps ${APP_NAME} --description 'Mozn profile ${profile}'`,
 				`    command ${command.fish} --profile=${profile} $argv`,
 				"end",
 			].join("\n");
@@ -306,10 +320,10 @@ function renderAliasBlock(
 }
 
 function upsertBlock(content: string, aliasName: string, block: string): string {
-	const start = `# >>> omp profile alias: ${aliasName} >>>`;
-	const end = `# <<< omp profile alias: ${aliasName} <<<`;
-	const startIndex = content.indexOf(start);
-	if (startIndex !== -1) {
+	for (const brand of [APP_NAME, LEGACY_ALIAS_MARKER_BRAND]) {
+		const { start, end } = aliasMarkers(brand, aliasName);
+		const startIndex = content.indexOf(start);
+		if (startIndex === -1) continue;
 		const endIndex = content.indexOf(end, startIndex + start.length);
 		if (endIndex === -1) {
 			throw new Error(

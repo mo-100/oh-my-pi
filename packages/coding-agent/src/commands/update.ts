@@ -1,43 +1,30 @@
 /**
- * Check for and install updates.
+ * Update installed plugins. Self-update is disabled in this source fork.
  */
 
 import { Command, Flags } from "@oh-my-pi/pi-utils/cli";
 import { updateHelp as commandHelp } from "../cli/command-help";
 import * as pluginCli from "../cli/plugin-cli";
-import * as updateCli from "../cli/update-cli";
-import { CliUsageError } from "../cli/usage-error";
 import { initTheme } from "@oh-my-pi/pi-tui/theme";
 
 export default class Update extends Command {
 	static description = commandHelp.description;
 	static flags = {
-		force: Flags.boolean({ char: "f", description: "Force update", default: false }),
-		check: Flags.boolean({ char: "c", description: "Check for updates without installing", default: false }),
 		plugins: Flags.boolean({ char: "l", description: "Update installed plugins", default: false }),
-		canary: Flags.boolean({ description: "Switch to the canary channel and update", default: false }),
-		stable: Flags.boolean({ description: "Switch back to the stable channel", default: false }),
 	};
 
-	static examples = [
-		"omp update",
-		"omp update --check",
-		"omp update --canary",
-		"# If GitHub rate-limits release metadata, set GITHUB_TOKEN or GH_TOKEN\n  GITHUB_TOKEN=... omp update",
-	];
+	static examples = ["mozn update --plugins"];
 
 	async run(): Promise<void> {
 		const { flags } = await this.parse(Update);
 		await initTheme();
-		if (flags.canary && flags.stable) throw new CliUsageError("--canary and --stable are mutually exclusive");
-		if (flags.plugins) {
-			await pluginCli.runPluginCommand({ action: "upgrade", args: [], flags: {} });
-		} else {
-			await updateCli.runUpdateCommand({
-				force: flags.force,
-				check: flags.check,
-				channel: flags.canary ? "canary" : flags.stable ? "stable" : undefined,
-			});
+		if (!flags.plugins) {
+			process.stderr.write(
+				"update: self-update is disabled in this build (source fork of oh-my-pi); rebuild with `bun run build` in packages/coding-agent, or pass --plugins to update installed plugins.\n",
+			);
+			process.exitCode = 1;
+			return;
 		}
+		await pluginCli.runPluginCommand({ action: "upgrade", args: [], flags: {} });
 	}
 }
