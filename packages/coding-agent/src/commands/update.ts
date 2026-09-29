@@ -20,7 +20,7 @@ export default class Update extends Command {
 		await initTheme();
 		if (!flags.plugins) {
 			process.stderr.write(
-				"update: self-update is disabled in this build (source fork of oh-my-pi); rebuild with `bun run build` in packages/coding-agent, or pass --plugins to update installed plugins.\n",
+				"update: self-update is disabled in this build (Mozn source build); rebuild with `bun run build` in packages/coding-agent, or pass --plugins to update installed plugins.\n",
 			);
 			process.exitCode = 1;
 			return;
